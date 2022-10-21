@@ -279,6 +279,10 @@ public class Parser {
                     boolean value = Boolean.parseBoolean(match(Token.Type.BOOLEAN_LITERAL).getValue());
                     r = new Exp.AssignExp(new Exp.VariableExp(name), new Exp.ObjectExp(value));
                 }
+                else if (checkToken(Token.Type.NULL)) {
+                    match(Token.Type.NULL);
+                    r = new Exp.AssignExp(new Exp.VariableExp(name), new Exp.ObjectExp(null));
+                }
                 match(Token.Type.SEMICOLON);
                 ast1.add(r);
                 return ast1;
@@ -361,6 +365,15 @@ public class Parser {
         }
         else if (checkToken(Token.Type.IDENTIFIER)) {
             String name = match(Token.Type.IDENTIFIER).getValue();
+
+            if (checkToken(Token.Type.DOT)) {
+                while (this.currentToken.getType() != Token.Type.LPAREN) {
+                    match(Token.Type.DOT);
+                    String identifier = match(Token.Type.IDENTIFIER).getValue();
+                    name += "." + identifier;
+                }
+            }
+
             match(Token.Type.LPAREN);
             ArrayList<Exp> exps = new ArrayList<>();
 
@@ -401,6 +414,22 @@ public class Parser {
             }
 
             match(Token.Type.RPAREN);
+
+            if (checkToken(Token.Type.COLON)) {
+                match(Token.Type.COLON);
+                String identifier = match(Token.Type.VOID).getValue();
+                match(Token.Type.LBRACE);
+                ArrayList<Exp> block = new ArrayList<>();
+                while (this.currentToken.getType() != Token.Type.RBRACE) {
+                    AST body = parseStatements();
+                    block.addAll(body.getExps());
+                }
+                match(Token.Type.RBRACE);
+                Exp r = new Exp.MethodDefExp(identifier, exps, block);
+                ast1.add(r);
+                return ast1;
+            }
+
             match(Token.Type.SEMICOLON);
 
             ArrayList<Exp> expr = new ArrayList<>();
@@ -420,11 +449,24 @@ public class Parser {
             if (expr.size() > 0) {
                 ArrayList<Exp> opkegsp = new ArrayList<>();
                 opkegsp.add(parseExpression(expr));
-                Exp r = new Exp.MethodCallExp(name, opkegsp);
-                ast1.add(r);
-            } else {
-                Exp r = new Exp.MethodCallExp(name, exps);
-                ast1.add(r);
+                if (name.contains(".")) {
+                    String[] split = name.split("\\.");
+                    Exp r = new Exp.MethodCallFromExp(split[0], split[1], opkegsp);
+                    ast1.add(r);
+                } else {
+                    Exp r = new Exp.MethodCallExp(name, opkegsp);
+                    ast1.add(r);
+                }
+            }
+            else {
+                if (name.contains(".")) {
+                    String[] split = name.split("\\.");
+                    Exp r = new Exp.MethodCallFromExp(split[0], split[1], exps);
+                    ast1.add(r);
+                } else {
+                    Exp r = new Exp.MethodCallExp(name, exps);
+                    ast1.add(r);
+                }
             }
 
             return ast1;
@@ -920,9 +962,10 @@ public class Parser {
             match(Token.Type.LBRACE);
             ArrayList<Exp> exps = new ArrayList<>();
 
-            while (this.currentToken.getType() != Token.Type.RBRACE) {
+            while (this.currentToken.getType() != Token.Type.RBRACE || pos >= tokens.size() - 1) {
                 AST body = parseStatements();
                 exps.addAll(body.getExps());
+
             }
 
             match(Token.Type.RBRACE);
@@ -957,41 +1000,13 @@ public class Parser {
             return new Exp.BinOpExp(op, left, right);
         }
     }
-    public ArrayList<Exp> sortExpression(ArrayList<Exp> exps) {
-        ArrayList<Exp> sorted = new ArrayList<>();
-        for (Exp exp : exps) {
-            if (exp instanceof Exp.BinOpExp) {
-                Exp.BinOpExp binOpExp = (Exp.BinOpExp) exp;
-                if (binOpExp.op == Exp.BinOpExp.Op.MUL || binOpExp.op == Exp.BinOpExp.Op.DIV) {
-                    sorted.add(binOpExp);
-                }
-            }
-        }
-        for (Exp exp : exps) {
-            if (exp instanceof Exp.BinOpExp) {
-                Exp.BinOpExp binOpExp = (Exp.BinOpExp) exp;
-                if (binOpExp.op == Exp.BinOpExp.Op.ADD || binOpExp.op == Exp.BinOpExp.Op.SUB) {
-                    sorted.add(binOpExp);
-                }
-            }
-        }
-        return sorted;
-    }
     public Exp parseExpression(ArrayList<Exp> exps) {
         ArrayList<Exp> newExps = new ArrayList<>(exps);
-
         for (int i = 0; i < newExps.size(); i++) {
             Exp exp = newExps.get(i);
             if (exp instanceof Exp.BinOpExp) {
                 Exp.BinOpExp binOpExp = (Exp.BinOpExp) exp;
-                if (binOpExp.op == Exp.BinOpExp.Op.MUL || binOpExp.op == Exp.BinOpExp.Op.DIV) {
-                    Exp left = newExps.get(i - 1);
-                    Exp right = newExps.get(i + 1);
-                    newExps.set(i - 1, new Exp.BinaryExp(binOpExp.op, left, right));
-                    newExps.remove(i);
-                    newExps.remove(i);
-                    i--;
-                } else if (binOpExp.op == Exp.BinOpExp.Op.ADD || binOpExp.op == Exp.BinOpExp.Op.SUB) {
+                if (binOpExp.op == Exp.BinOpExp.Op.MUL || binOpExp.op == Exp.BinOpExp.Op.DIV || binOpExp.op == Exp.BinOpExp.Op.MOD) {
                     Exp left = newExps.get(i - 1);
                     Exp right = newExps.get(i + 1);
                     newExps.set(i - 1, new Exp.BinaryExp(binOpExp.op, left, right));
@@ -1001,8 +1016,20 @@ public class Parser {
                 }
             }
         }
-
-        ArrayList<Exp> parsed = sortExpression(newExps);
-        return parsed.get(parsed.size() - 1);
+        for (int i = 0; i < newExps.size(); i++) {
+            Exp exp = newExps.get(i);
+            if (exp instanceof Exp.BinOpExp) {
+                Exp.BinOpExp binOpExp = (Exp.BinOpExp) exp;
+                if (binOpExp.op == Exp.BinOpExp.Op.ADD || binOpExp.op == Exp.BinOpExp.Op.SUB) {
+                    Exp left = newExps.get(i - 1);
+                    Exp right = newExps.get(i + 1);
+                    newExps.set(i - 1, new Exp.BinaryExp(binOpExp.op, left, right));
+                    newExps.remove(i);
+                    newExps.remove(i);
+                    i--;
+                }
+            }
+        }
+        return newExps.get(newExps.size() - 1);
     }
 }

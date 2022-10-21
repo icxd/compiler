@@ -89,9 +89,19 @@ public class Lexer {
                     start++;
                     break;
                 case '/':
-                    tokens.add(new Token(Token.Type.DIV, "/", line, start, end));
-                    pos++;
-                    start++;
+                    if (pos + 1 < input.length() && input.charAt(pos + 1) == '/') {
+                        while (pos < input.length() && input.charAt(pos) != '\n') {
+                            pos++;
+                        }
+
+                        start = 0;
+                        end = 0;
+                        line++;
+                    } else {
+                        tokens.add(new Token(Token.Type.DIV, "/", line, start, end));
+                        pos++;
+                        start++;
+                    }
                     break;
                 case '%':
                     tokens.add(new Token(Token.Type.MOD, "%", line, start, end));
@@ -141,16 +151,21 @@ public class Lexer {
                     pos++;
                     start++;
                     break;
+                case ':':
+                    tokens.add(new Token(Token.Type.COLON, ":", line, start, end));
+                    pos++;
+                    start++;
+                    break;
                 case ',':
                     tokens.add(new Token(Token.Type.COMMA, ",", line, start, end));
                     pos++;
                     start++;
                     break;
-                /*case '.':
+                case '.':
                     tokens.add(new Token(Token.Type.DOT, ".", line, start, end));
                     pos++;
                     start++;
-                    break;*/
+                    break;
                 case '"':
                     pos++;
                     start++;
@@ -176,7 +191,6 @@ public class Lexer {
                 case '7':
                 case '8':
                 case '9':
-                case '.':
                     end = start;
                     while (pos < input.length() && (Character.isDigit(input.charAt(pos)) || input.charAt(pos) == '.')) {
                         pos++;
@@ -184,11 +198,11 @@ public class Lexer {
                     }
 
                     String number = input.substring(start, end);
-                    if (number.contains(".")) {
+                    tokens.add(new Token(Token.Type.INTEGER_LITERAL, number, line, start, end));
+                    /*if (number.contains(".")) {
                         tokens.add(new Token(Token.Type.FLOAT_LITERAL, number, line, start, end));
                     } else {
-                        tokens.add(new Token(Token.Type.INTEGER_LITERAL, number, line, start, end));
-                    }
+                    }*/
                     start = pos;
                     break;
                 default:

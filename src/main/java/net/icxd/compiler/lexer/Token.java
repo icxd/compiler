@@ -93,6 +93,7 @@ public class Token {
         RBRACE("}"),
         LBRACKET("["),
         RBRACKET("]"),
+        COLON(":"),
         SEMICOLON(";"),
         COMMA(","),
         DOT("."),
@@ -112,6 +113,7 @@ public class Token {
         INSTANCE("instance"),
         VOID("void"),
         // Special tokens
+        COMMENT(""),
         EOF(""),
         ERROR("");
 

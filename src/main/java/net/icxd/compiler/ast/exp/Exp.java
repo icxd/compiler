@@ -8,10 +8,6 @@ import java.util.List;
 import java.util.StringJoiner;
 
 public abstract class Exp {
-    public void dump() {
-        dump(this, new StringBuilder(" "), true, new StringBuilder());
-    }
-
     public static void dump(ArrayList<Exp> exps) {
         dump(exps, new StringBuilder(" "), new StringBuilder());
     }
@@ -168,6 +164,23 @@ public abstract class Exp {
         @Override
         public String toString() {
             return ConsoleColors.WHITE_BOLD + "MethodCallExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + ')';
+        }
+    }
+
+    public static class MethodCallFromExp extends Exp {
+        public String className;
+        public String name;
+        public List<Exp> args;
+
+        public MethodCallFromExp(String className, String name, List<Exp> args) {
+            this.className = className;
+            this.name = name;
+            this.args = args;
+        }
+
+        @Override
+        public String toString() {
+            return ConsoleColors.WHITE_BOLD + "MethodCallFromExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + className + '\'' + ConsoleColors.RESET + ", " + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + ')';
         }
     }
 
