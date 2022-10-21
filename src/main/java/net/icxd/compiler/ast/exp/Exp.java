@@ -3,6 +3,7 @@ package net.icxd.compiler.ast.exp;
 import net.icxd.compiler.utils.ConsoleColors;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -16,6 +17,9 @@ public abstract class Exp {
     }
 
     static void dump(ArrayList<Exp> e, StringBuilder indent, StringBuilder sb) {
+        if (e.size() == 0)
+            return;
+
         for (int i = 0; i < e.size(); i++) {
             dump(e.get(i), new StringBuilder(indent), i == e.size() - 1, sb);
         }
@@ -53,6 +57,9 @@ public abstract class Exp {
         } else if (e instanceof ConstructorExp) {
             ConstructorExp ce = (ConstructorExp) e;
             dump((ArrayList<Exp>) ce.body, new StringBuilder(indent).append(last ? "    " : "│   "), new StringBuilder());
+        } else if (e instanceof ImportExp) {
+            ImportExp ie = (ImportExp) e;
+            dump((ArrayList<Exp>) ie.methods, new StringBuilder(indent).append(last ? "    " : "│   "), new StringBuilder());
         }
     }
 
@@ -297,6 +304,61 @@ public abstract class Exp {
         }
     }
 
+    public static class ImportExp extends Exp {
+        public String name;
+        public String alias;
+        public List<Exp> methods;
+
+        public ImportExp(String name) {
+            this.name = name;
+            this.alias = null;
+            this.methods = new ArrayList<>();
+        }
+
+        public ImportExp(String name, String alias) {
+            this.name = name;
+            this.alias = alias;
+            this.methods = new ArrayList<>();
+        }
+
+        public ImportExp(String name, List<Exp> methods) {
+            this.name = name;
+            this.alias = null;
+            this.methods = methods;
+        }
+
+        @Override
+        public String toString() {
+            return ConsoleColors.WHITE_BOLD + "ImportExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + (alias == null ? "" : ", " + ConsoleColors.GREEN + '\'' + alias + '\'') + ConsoleColors.RESET + ')';
+        }
+    }
+
+    public static class ImportedMethodExp extends Exp {
+        public String name;
+
+        public ImportedMethodExp(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return ConsoleColors.WHITE_BOLD + "ImportedMethodExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + ')';
+        }
+    }
+
+    public static class ReturnExp extends Exp {
+        public Exp value;
+
+        public ReturnExp(Exp value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return ConsoleColors.WHITE_BOLD + "ReturnExp" + ConsoleColors.RESET + "(" + value + ConsoleColors.RESET + ')';
+        }
+    }
+
     public static class BinOpExp extends Exp {
         public Op op;
         public Exp left;
@@ -339,7 +401,8 @@ public abstract class Exp {
             GE(">="),
             AND("&&"),
             OR("||"),
-            ;
+            LPAREN("("),
+            RPAREN(")");;
 
             public final String value;
 

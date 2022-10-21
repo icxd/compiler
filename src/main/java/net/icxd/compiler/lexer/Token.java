@@ -66,6 +66,10 @@ public class Token {
         NULL("null"),
         TRUE("true"),
         FALSE("false"),
+        IMPORT("import"),
+        FROM("from"),
+        AS("as"),
+        INSTANCEOF("instanceof"),
         // Operators
         ASSIGN("="),
         ADD("+"),
@@ -105,6 +109,7 @@ public class Token {
         BOOLEAN("boolean"),
         STRING("string"),
         OBJECT("object"),
+        INSTANCE("instance"),
         VOID("void"),
         // Special tokens
         EOF(""),
