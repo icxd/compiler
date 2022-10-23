@@ -109,6 +109,7 @@ public class Token {
         FLOAT("float"),
         BOOLEAN("boolean"),
         STRING("string"),
+        CHAR("char"),
         OBJECT("object"),
         INSTANCE("instance"),
         VOID("void"),

@@ -46,10 +46,33 @@ public class Parser {
             match(Token.Type.STRING);
             String name = match(Token.Type.IDENTIFIER).getValue();
             match(Token.Type.ASSIGN);
+
+            if (checkToken(Token.Type.IDENTIFIER)) {
+                String value = match(Token.Type.IDENTIFIER).getValue();
+                match(Token.Type.SEMICOLON);
+
+                Exp exp = new Exp.AssignExp(new Exp.VariableExp(name), new Exp.VariableExp(value));
+                ast1.add(exp);
+
+                return ast1;
+            }
+
             String value = match(Token.Type.STRING_LITERAL).getValue();
             match(Token.Type.SEMICOLON);
 
             Exp exp = new Exp.AssignExp(new Exp.VariableExp(name), new Exp.StringExp(value));
+            ast1.add(exp);
+
+            return ast1;
+        }
+        else if (checkToken(Token.Type.CHAR)) {
+            match(Token.Type.CHAR);
+            String name = match(Token.Type.IDENTIFIER).getValue();
+            match(Token.Type.ASSIGN);
+            char value = match(Token.Type.CHAR_LITERAL).getValue().charAt(0);
+            match(Token.Type.SEMICOLON);
+
+            Exp exp = new Exp.AssignExp(new Exp.VariableExp(name), new Exp.CharExp(value));
             ast1.add(exp);
 
             return ast1;
@@ -365,7 +388,6 @@ public class Parser {
         }
         else if (checkToken(Token.Type.IDENTIFIER)) {
             String name = match(Token.Type.IDENTIFIER).getValue();
-
             if (checkToken(Token.Type.DOT)) {
                 while (this.currentToken.getType() != Token.Type.LPAREN) {
                     match(Token.Type.DOT);
@@ -373,10 +395,39 @@ public class Parser {
                     name += "." + identifier;
                 }
             }
-
+            else if (checkToken(Token.Type.ASSIGN)) {
+                match(Token.Type.ASSIGN);
+                Exp r = null;
+                if (checkToken(Token.Type.IDENTIFIER)) {
+                    String identifier = match(Token.Type.IDENTIFIER).getValue();
+                    r = new Exp.ReassignExp(new Exp.VariableExp(name), new Exp.VariableExp(identifier));
+                }
+                else if (checkToken(Token.Type.STRING_LITERAL)) {
+                    String value = match(Token.Type.STRING_LITERAL).getValue();
+                    r = new Exp.ReassignExp(new Exp.VariableExp(name), new Exp.StringExp(value));
+                }
+                else if (checkToken(Token.Type.INTEGER_LITERAL)) {
+                    int value = Integer.parseInt(match(Token.Type.INTEGER_LITERAL).getValue());
+                    r = new Exp.ReassignExp(new Exp.VariableExp(name), new Exp.IntegerExp(value));
+                }
+                else if (checkToken(Token.Type.FLOAT_LITERAL)) {
+                    float value = Float.parseFloat(match(Token.Type.FLOAT_LITERAL).getValue());
+                    r = new Exp.ReassignExp(new Exp.VariableExp(name), new Exp.FloatExp(value));
+                }
+                else if (checkToken(Token.Type.BOOLEAN_LITERAL)) {
+                    boolean value = Boolean.parseBoolean(match(Token.Type.BOOLEAN_LITERAL).getValue());
+                    r = new Exp.ReassignExp(new Exp.VariableExp(name), new Exp.BooleanExp(value));
+                }
+                else if (checkToken(Token.Type.NULL)) {
+                    match(Token.Type.NULL);
+                    r = new Exp.ReassignExp(new Exp.VariableExp(name), new Exp.ObjectExp(null));
+                }
+                match(Token.Type.SEMICOLON);
+                ast1.add(r);
+                return ast1;
+            }
             match(Token.Type.LPAREN);
             ArrayList<Exp> exps = new ArrayList<>();
-
             while (this.currentToken.getType() != Token.Type.RPAREN || pos == tokens.size() - 1) {
                 if (checkToken(Token.Type.INTEGER_LITERAL)) {
                     int value = Integer.parseInt(match(Token.Type.INTEGER_LITERAL).getValue());
@@ -412,9 +463,7 @@ public class Parser {
                     break;
                 }
             }
-
             match(Token.Type.RPAREN);
-
             if (checkToken(Token.Type.COLON)) {
                 match(Token.Type.COLON);
                 String identifier = match(Token.Type.VOID).getValue();
@@ -429,9 +478,7 @@ public class Parser {
                 ast1.add(r);
                 return ast1;
             }
-
             match(Token.Type.SEMICOLON);
-
             ArrayList<Exp> expr = new ArrayList<>();
             for (Exp value : exps) {
                 if (value instanceof Exp.IntegerExp) {
@@ -445,7 +492,6 @@ public class Parser {
                     break;
                 }
             }
-
             if (expr.size() > 0) {
                 ArrayList<Exp> opkegsp = new ArrayList<>();
                 opkegsp.add(parseExpression(expr));
@@ -468,7 +514,6 @@ public class Parser {
                     ast1.add(r);
                 }
             }
-
             return ast1;
         }
         else if (checkToken(Token.Type.PRINT)) {
@@ -491,16 +536,12 @@ public class Parser {
                     exps.add(new Exp.BooleanExp(value));
                 } else if (checkToken(Token.Type.ADD)) {
                     match(Token.Type.ADD);
-                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.ADD));
                 } else if (checkToken(Token.Type.SUB)) {
                     match(Token.Type.SUB);
-                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.SUB));
                 } else if (checkToken(Token.Type.MUL)) {
                     match(Token.Type.MUL);
-                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.MUL));
                 } else if (checkToken(Token.Type.DIV)) {
                     match(Token.Type.DIV);
-                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.DIV));
                 } else if (checkToken(Token.Type.RPAREN)) {
                     match(Token.Type.RPAREN);
                     break;

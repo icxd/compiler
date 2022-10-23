@@ -181,6 +181,25 @@ public class Lexer {
                     pos++;
                     start = pos;
                     break;
+                case '\'':
+                    pos++;
+                    start++;
+                    end = start;
+                    while (pos < input.length() && input.charAt(pos) != '\'') {
+                        pos++;
+                        end++;
+                    }
+                    if (pos == input.length()) {
+                        throw new RuntimeException("Unterminated character literal");
+                    }
+                    String s = input.substring(start, end);
+                    if (s.length() != 1) {
+                        throw new RuntimeException("Invalid character literal");
+                    }
+                    tokens.add(new Token(Token.Type.CHAR_LITERAL, s, line, start, end));
+                    pos++;
+                    start = pos;
+                    break;
                 case '0':
                 case '1':
                 case '2':

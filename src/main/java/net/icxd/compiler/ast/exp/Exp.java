@@ -32,6 +32,10 @@ public abstract class Exp {
             AssignExp ae = (AssignExp) e;
             dump(ae.left, new StringBuilder(indent).append(last ? "    " : "│   "), false, new StringBuilder());
             dump(ae.right, new StringBuilder(indent).append(last ? "    " : "│   "), true, new StringBuilder());
+        } else if (e instanceof ReassignExp) {
+            ReassignExp ae = (ReassignExp) e;
+            dump(ae.left, new StringBuilder(indent).append(last ? "    " : "│   "), false, new StringBuilder());
+            dump(ae.right, new StringBuilder(indent).append(last ? "    " : "│   "), true, new StringBuilder());
         } else if (e instanceof MethodDefExp) {
             MethodDefExp mde = (MethodDefExp) e;
             dump((ArrayList<Exp>) mde.body, new StringBuilder(indent).append(last ? "    " : "│   "), new StringBuilder());
@@ -94,7 +98,20 @@ public abstract class Exp {
 
         @Override
         public String toString() {
-            return ConsoleColors.WHITE_BOLD + "StringExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + value + '\'' + ConsoleColors.RESET + ')';
+            return ConsoleColors.WHITE_BOLD + "StringExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '"' + value + '"' + ConsoleColors.RESET + ')';
+        }
+    }
+
+    public static class CharExp extends Exp {
+        public char value;
+
+        public CharExp(char value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return ConsoleColors.WHITE_BOLD + "CharExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + value + '\'' + ConsoleColors.RESET + ')';
         }
     }
 
@@ -136,6 +153,21 @@ public abstract class Exp {
         @Override
         public String toString() {
             return ConsoleColors.WHITE_BOLD + "AssignExp" + ConsoleColors.RESET;
+        }
+    }
+
+    public static class ReassignExp extends Exp {
+        public Exp left;
+        public Exp right;
+
+        public ReassignExp(Exp left, Exp right) {
+            this.left = left;
+            this.right = right;
+        }
+
+        @Override
+        public String toString() {
+            return ConsoleColors.WHITE_BOLD + "ReassignExp" + ConsoleColors.RESET;
         }
     }
 
