@@ -53,6 +53,7 @@ public class Token {
         ELSE("else"),
         WHILE("while"),
         FOR("for"),
+        FOREACH("foreach"),
         DO("do"),
         PRINT("print"),
         BREAK("break"),
@@ -73,7 +74,9 @@ public class Token {
         // Operators
         ASSIGN("="),
         ADD("+"),
+        INCREMENT("++"),
         SUB("-"),
+        DECREMENT("--"),
         MUL("*"),
         DIV("/"),
         MOD("%"),

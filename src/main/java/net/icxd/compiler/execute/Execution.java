@@ -122,17 +122,164 @@ public class Execution {
             for (Exp e : body)
                 execute(e);
         }
+        else if (exp instanceof Exp.PrintExp) {
+            Exp.PrintExp pe = (Exp.PrintExp) exp;
+            ArrayList<Exp> values = pe.value;
+            StringBuilder sb = new StringBuilder();
+            for (Exp e : values) {
+                if (e instanceof Exp.IntegerExp) {
+                    int value = ((Exp.IntegerExp) e).value;
+                    sb.append(value);
+                } else if (e instanceof Exp.StringExp) {
+                    String value = ((Exp.StringExp) e).value;
+                    sb.append(value);
+                } else if (e instanceof Exp.CharExp) {
+                    char value = ((Exp.CharExp) e).value;
+                    sb.append(value);
+                } else if (e instanceof Exp.FloatExp) {
+                    float value = ((Exp.FloatExp) e).value;
+                    sb.append(value);
+                } else if (e instanceof Exp.BooleanExp) {
+                    boolean value = ((Exp.BooleanExp) e).value;
+                    sb.append(value);
+                } else if (e instanceof Exp.VariableExp) {
+                    String value = ((Exp.VariableExp) e).value;
+                    if (!variables.containsKey(value))
+                        throw new RuntimeException("Variable '" + value + "' does not exist");
+                    sb.append(variables.get(value).getValue());
+                } else if (e instanceof Exp.ObjectExp) {
+                    Object value = ((Exp.ObjectExp) e).value;
+                    sb.append(value);
+                } else {
+                    throw new RuntimeException("Invalid variable declaration: " + e);
+                }
+            }
+            System.out.println(sb);
+        }
+        else if (exp instanceof Exp.IncrementExp) {
+            Exp.IncrementExp ie = (Exp.IncrementExp) exp;
+            String id = ie.name;
+            if (!variables.containsKey(id))
+                throw new RuntimeException("Variable '" + id + "' does not exist");
+            Variable variable = variables.get(id);
+            if (variable.getValue() instanceof Integer) {
+                int value = (int) variable.getValue();
+                value++;
+                variables.put(id, new Variable(id, value));
+            } else {
+                throw new RuntimeException("Variable '" + id + "' is not an integer");
+            }
+        }
+        else if (exp instanceof Exp.DecrementExp) {
+            Exp.DecrementExp de = (Exp.DecrementExp) exp;
+            String id = de.name;
+            if (!variables.containsKey(id))
+                throw new RuntimeException("Variable '" + id + "' does not exist");
+            Variable variable = variables.get(id);
+            if (variable.getValue() instanceof Integer) {
+                int value = (int) variable.getValue();
+                value--;
+                variables.put(id, new Variable(id, value));
+            } else {
+                throw new RuntimeException("Variable '" + id + "' is not an integer");
+            }
+        }
+        else if (exp instanceof Exp.ForExp) {
+            Exp.ForExp fe = (Exp.ForExp) exp;
+            Exp.AssignExp init = (Exp.AssignExp) fe.init;
+            String id = ((Exp.VariableExp) init.left).value;
+            int v = ((Exp.IntegerExp) init.right).value;
+            variables.put(id, new Variable(id, v));
+            Variable variable = variables.get(id);
+            if (variable.getValue() instanceof Integer) {
+                Exp.BinOpExp condition = (Exp.BinOpExp) fe.condition;
+                int end = ((Exp.IntegerExp) condition.right).value;
+                Exp.VariableExp ve = (Exp.VariableExp) condition.left;
+
+                if (!variables.containsKey(ve.value))
+                    throw new RuntimeException("Variable '" + ve.value + "' does not exist");
+
+                for (int i = (int) variable.getValue(); i < end; i++) {
+                    ArrayList<Exp> body = (ArrayList<Exp>) fe.body;
+                    for (Exp e : body)
+                        execute(e);
+                    Exp.IncrementExp ie = (Exp.IncrementExp) fe.increment;
+                    String id2 = ie.name;
+                    if (!variables.containsKey(id2))
+                        throw new RuntimeException("Variable '" + id2 + "' does not exist");
+                    Variable variable2 = variables.get(id2);
+                    if (variable2.getValue() instanceof Integer) {
+                        int value = (int) variable2.getValue();
+                        value++;
+                        variables.put(id2, new Variable(id2, value));
+                    } else {
+                        throw new RuntimeException("Variable '" + id2 + "' is not an integer");
+                    }
+                }
+                variables.remove(id);
+            } else {
+                throw new RuntimeException("Variable '" + id + "' is not an integer");
+            }
+        }
+        else if (exp instanceof Exp.IfExp) {
+            Exp.IfExp ie = (Exp.IfExp) exp;
+            Exp condition = ie.condition;
+            if (condition instanceof Exp.BinOpExp) {
+                Exp.BinOpExp boe = (Exp.BinOpExp) condition;
+                if (boe.left instanceof Exp.VariableExp) {
+                    if (boe.right instanceof Exp.BooleanExp) {
+                        String id = ((Exp.VariableExp) boe.left).value;
+                        if (!variables.containsKey(id))
+                            throw new RuntimeException("Variable '" + id + "' does not exist");
+                        Variable variable = variables.get(id);
+                        if (variable.getValue() instanceof Boolean) {
+                            boolean value = (boolean) variable.getValue();
+                            boolean value2 = ((Exp.BooleanExp) boe.right).value;
+                            if (boe.op == Exp.BinOpExp.Op.EQ) {
+                                if (value == value2) {
+                                    ArrayList<Exp> body = (ArrayList<Exp>) ie.body;
+                                    for (Exp e : body)
+                                        execute(e);
+                                } else {
+                                    Exp.ElseExp body = ie.elseBody;
+                                    for (Exp e : body.body)
+                                        execute(e);
+                                }
+                            } else if (boe.op == Exp.BinOpExp.Op.NE) {
+                                if (value != value2) {
+                                    ArrayList<Exp> body = (ArrayList<Exp>) ie.body;
+                                    for (Exp e : body)
+                                        execute(e);
+                                } else {
+                                    Exp.ElseExp body = ie.elseBody;
+                                    for (Exp e : body.body)
+                                        execute(e);
+                                }
+                            } else {
+                                throw new RuntimeException("Invalid operator: " + boe.op);
+                            }
+                        } else {
+                            throw new RuntimeException("Variable '" + id + "' is not a boolean");
+                        }
+                    } else {
+                        throw new RuntimeException("Invalid condition: " + boe.right);
+                    }
+                }
+            }
+        }
     }
     private void registerDefaultMethods() {
-        methods.put("print", new Method("print", "void", new ArrayList<>(), new ArrayList<Exp>() {{
-            add(new Exp.MethodCallExp("println", new ArrayList<>()));
-        }}));
+        
     }
     public void dump() {
+        System.out.println();
+        System.out.println(ConsoleColors.WHITE_BOLD + "Variables:" + ConsoleColors.RESET);
         for (Variable v : variables.values())
-            System.out.println(ConsoleColors.WHITE_BOLD + v.getId() + ConsoleColors.RESET + " = " + getColor(v.getValue()) + v.getValue() + ConsoleColors.RESET);
+            System.out.println("  " + ConsoleColors.WHITE_BOLD + v.getId() + ConsoleColors.RESET + " = " + getColor(v.getValue()) + v.getValue() + ConsoleColors.RESET);
+        System.out.println();
+        System.out.println(ConsoleColors.WHITE_BOLD + "Methods:" + ConsoleColors.RESET);
         for (Method m : methods.values())
-            System.out.println(ConsoleColors.WHITE_BOLD + m.getId() + ConsoleColors.RESET + " = " + getColor(m) + m + ConsoleColors.RESET);
+            System.out.println("  " + ConsoleColors.WHITE_BOLD + m.getId() + ConsoleColors.RESET + " = " + getColor(m) + m + ConsoleColors.RESET);
     }
     private String getColor(Object value) {
         if (value instanceof Integer) {

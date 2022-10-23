@@ -426,6 +426,20 @@ public class Parser {
                 ast1.add(r);
                 return ast1;
             }
+            else if (checkToken(Token.Type.INCREMENT)) {
+                match(Token.Type.INCREMENT);
+                match(Token.Type.SEMICOLON);
+                Exp r = new Exp.IncrementExp(name);
+                ast1.add(r);
+                return ast1;
+            }
+            else if (checkToken(Token.Type.DECREMENT)) {
+                match(Token.Type.DECREMENT);
+                match(Token.Type.SEMICOLON);
+                Exp r = new Exp.DecrementExp(name);
+                ast1.add(r);
+                return ast1;
+            }
             match(Token.Type.LPAREN);
             ArrayList<Exp> exps = new ArrayList<>();
             while (this.currentToken.getType() != Token.Type.RPAREN || pos == tokens.size() - 1) {
@@ -573,10 +587,10 @@ public class Parser {
             if (expr.size() > 0) {
                 ArrayList<Exp> opkegsp = new ArrayList<>();
                 opkegsp.add(parseExpression(expr));
-                Exp r = new Exp.MethodCallExp("print", opkegsp);
+                Exp r = new Exp.PrintExp(opkegsp);
                 ast1.add(r);
             } else {
-                Exp r = new Exp.MethodCallExp("print", exps);
+                Exp r = new Exp.PrintExp(exps);
                 ast1.add(r);
             }
 
@@ -748,6 +762,100 @@ public class Parser {
             Exp r = new Exp.WhileExp(condition, block);
             ast1.add(r);
 
+            return ast1;
+        }
+        else if (checkToken(Token.Type.FOR)) {
+            match(Token.Type.FOR);
+            match(Token.Type.LPAREN);
+            match(Token.Type.INT);
+            String i = match(Token.Type.IDENTIFIER).getValue();
+            match(Token.Type.ASSIGN);
+            int v = Integer.parseInt(match(Token.Type.INTEGER_LITERAL).getValue());
+            Exp init = new Exp.VariableExp(i);
+            Exp initValue = new Exp.IntegerExp(v);
+            Exp initAssign = new Exp.AssignExp(init, initValue);
+            match(Token.Type.SEMICOLON);
+            ArrayList<Exp> exps = new ArrayList<>();
+            while (this.currentToken.getType() != Token.Type.RPAREN || pos == tokens.size() - 1) {
+                if (checkToken(Token.Type.INTEGER_LITERAL)) {
+                    int value = Integer.parseInt(match(Token.Type.INTEGER_LITERAL).getValue());
+                    exps.add(new Exp.IntegerExp(value));
+                } else if (checkToken(Token.Type.IDENTIFIER)) {
+                    String identifier = match(Token.Type.IDENTIFIER).getValue();
+                    if (!identifier.equals(i))
+                        error("unexpected token: " + this.currentToken);
+                    exps.add(new Exp.VariableExp(identifier));
+                } else if (checkToken(Token.Type.STRING_LITERAL)) {
+                    String value = match(Token.Type.STRING_LITERAL).getValue();
+                    exps.add(new Exp.StringExp(value));
+                } else if (checkToken(Token.Type.BOOLEAN_LITERAL)) {
+                    boolean value = Boolean.parseBoolean(match(Token.Type.BOOLEAN_LITERAL).getValue());
+                    exps.add(new Exp.BooleanExp(value));
+                } else if (checkToken(Token.Type.EQ)) {
+                    match(Token.Type.EQ);
+                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.EQ));
+                } else if (checkToken(Token.Type.NE)) {
+                    match(Token.Type.NE);
+                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.NE));
+                } else if (checkToken(Token.Type.LT)) {
+                    match(Token.Type.LT);
+                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.LT));
+                } else if (checkToken(Token.Type.LE)) {
+                    match(Token.Type.LE);
+                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.LE));
+                } else if (checkToken(Token.Type.GT)) {
+                    match(Token.Type.GT);
+                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.GT));
+                } else if (checkToken(Token.Type.GE)) {
+                    match(Token.Type.GE);
+                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.GE));
+                } else if (checkToken(Token.Type.ADD)) {
+                    match(Token.Type.ADD);
+                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.ADD));
+                } else if (checkToken(Token.Type.SUB)) {
+                    match(Token.Type.SUB);
+                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.SUB));
+                } else if (checkToken(Token.Type.MUL)) {
+                    match(Token.Type.MUL);
+                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.MUL));
+                } else if (checkToken(Token.Type.DIV)) {
+                    match(Token.Type.DIV);
+                    exps.add(new Exp.BinOpExp(Exp.BinOpExp.Op.DIV));
+                } else if (checkToken(Token.Type.RPAREN)) {
+                    match(Token.Type.RPAREN);
+                    break;
+                } else if (checkToken(Token.Type.EOF)) {
+                    break;
+                } else if (checkToken(Token.Type.SEMICOLON)) {
+                    break;
+                } else {
+                    error("unexpected token: " + this.currentToken);
+                    break;
+                }
+            }
+            Exp condition = parseCondition(exps);
+            match(Token.Type.SEMICOLON);
+            Exp increment = null;
+            String j = match(Token.Type.IDENTIFIER).getValue();
+            if (!j.equals(i)) error("unexpected token: " + this.currentToken);
+            if (checkToken(Token.Type.INCREMENT)) {
+                match(Token.Type.INCREMENT);
+                increment = new Exp.IncrementExp(j);
+            } else if (checkToken(Token.Type.DECREMENT)) {
+                match(Token.Type.DECREMENT);
+                increment = new Exp.DecrementExp(j);
+            } else {
+                error("unexpected token: " + this.currentToken);
+            }
+            match(Token.Type.RPAREN);
+            ArrayList<Exp> block = new ArrayList<>();
+            match(Token.Type.LBRACE);
+            while (this.currentToken.getType() != Token.Type.RBRACE || pos == tokens.size() - 1) {
+                block.addAll(parseStatements().getExps());
+            }
+            match(Token.Type.RBRACE);
+            Exp r = new Exp.ForExp(initAssign, condition, increment, block);
+            ast1.add(r);
             return ast1;
         }
         else if (checkToken(Token.Type.CONSTRUCTOR)) {

@@ -11,7 +11,6 @@ public abstract class Exp {
     public static void dump(ArrayList<Exp> exps) {
         dump(exps, new StringBuilder(" "), new StringBuilder());
     }
-
     static void dump(ArrayList<Exp> e, StringBuilder indent, StringBuilder sb) {
         if (e.size() == 0)
             return;
@@ -20,7 +19,6 @@ public abstract class Exp {
             dump(e.get(i), new StringBuilder(indent), i == e.size() - 1, sb);
         }
     }
-
     static void dump(Exp e, StringBuilder indent, boolean last, StringBuilder prefix) {
         System.out.println(indent.toString() + prefix.toString() + (last ? "└── " : "├── ") + e.toString());
 
@@ -51,6 +49,10 @@ public abstract class Exp {
         } else if (e instanceof WhileExp) {
             WhileExp we = (WhileExp) e;
             dump((ArrayList<Exp>) we.body, new StringBuilder(indent).append(last ? "    " : "│   "), new StringBuilder());
+        } else if (e instanceof ForExp) {
+            ForExp fe = (ForExp) e;
+            dump(fe.init, new StringBuilder(indent).append(last ? "    " : "│   "), false, new StringBuilder());
+            dump((ArrayList<Exp>) fe.body, new StringBuilder(indent).append(last ? "    " : "│   "), new StringBuilder());
         } else if (e instanceof ClassExp) {
             ClassExp ce = (ClassExp) e;
             dump((ArrayList<Exp>) ce.body, new StringBuilder(indent).append(last ? "    " : "│   "), new StringBuilder());
@@ -60,9 +62,11 @@ public abstract class Exp {
         } else if (e instanceof ImportExp) {
             ImportExp ie = (ImportExp) e;
             dump((ArrayList<Exp>) ie.methods, new StringBuilder(indent).append(last ? "    " : "│   "), new StringBuilder());
+        } else if (e instanceof PrintExp) {
+            PrintExp pe = (PrintExp) e;
+            dump(pe.value, new StringBuilder(indent).append(last ? "    " : "│   "), new StringBuilder());
         }
     }
-
     public static class IntegerExp extends Exp {
         public int value;
 
@@ -75,7 +79,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "IntegerExp" + ConsoleColors.RESET + "(" + ConsoleColors.YELLOW + value + ConsoleColors.RESET + ')';
         }
     }
-
     public static class FloatExp extends Exp {
         public float value;
 
@@ -88,7 +91,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "FloatExp" + ConsoleColors.RESET + "(" + ConsoleColors.YELLOW + value + ConsoleColors.RESET + ')';
         }
     }
-
     public static class StringExp extends Exp {
         public String value;
 
@@ -101,7 +103,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "StringExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '"' + value + '"' + ConsoleColors.RESET + ')';
         }
     }
-
     public static class CharExp extends Exp {
         public char value;
 
@@ -114,7 +115,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "CharExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + value + '\'' + ConsoleColors.RESET + ')';
         }
     }
-
     public static class BooleanExp extends Exp {
         public boolean value;
 
@@ -127,7 +127,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "BooleanExp" + ConsoleColors.RESET + "(" + ConsoleColors.PURPLE + value + ConsoleColors.RESET + ')';
         }
     }
-
     public static class ObjectExp extends Exp {
         public Object value;
 
@@ -140,7 +139,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "ObjectExp" + ConsoleColors.RESET + "(" + ConsoleColors.PURPLE + value + ConsoleColors.RESET + ')';
         }
     }
-
     public static class AssignExp extends Exp {
         public Exp left;
         public Exp right;
@@ -155,7 +153,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "AssignExp" + ConsoleColors.RESET;
         }
     }
-
     public static class ReassignExp extends Exp {
         public Exp left;
         public Exp right;
@@ -170,7 +167,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "ReassignExp" + ConsoleColors.RESET;
         }
     }
-
     public static class VariableExp extends Exp {
         public String value;
 
@@ -183,7 +179,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "VariableExp" + ConsoleColors.RESET + "(" + ConsoleColors.BLUE + value + ConsoleColors.RESET + ')';
         }
     }
-
     public static class MethodCallExp extends Exp {
         public String name;
         public List<Exp> args;
@@ -198,7 +193,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "MethodCallExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + ')';
         }
     }
-
     public static class MethodCallFromExp extends Exp {
         public String className;
         public String name;
@@ -215,7 +209,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "MethodCallFromExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + className + '\'' + ConsoleColors.RESET + ", " + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + ')';
         }
     }
-
     public static class MethodDefExp extends Exp {
         public String name;
         public List<Exp> args;
@@ -235,7 +228,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "MethodDefExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + (args.size() > 1 ? ", " + sj : "") + ")";
         }
     }
-
     public static class BinaryExp extends Exp {
         public BinOpExp.Op operator;
         public Exp left;
@@ -252,7 +244,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "BinaryExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + operator.value + '\'' + ConsoleColors.RESET + ')';
         }
     }
-
     public static class IfExp extends Exp {
         public Exp condition;
         public List<Exp> body;
@@ -269,7 +260,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "IfExp" + ConsoleColors.RESET + "(" + condition + ConsoleColors.RESET + ')';
         }
     }
-
     public static class ElseExp extends Exp {
         public List<Exp> body;
 
@@ -282,7 +272,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "ElseExp" + ConsoleColors.RESET;
         }
     }
-
     public static class WhileExp extends Exp {
         public Exp condition;
         public List<Exp> body;
@@ -297,7 +286,24 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "WhileExp" + ConsoleColors.RESET + "(" + condition + ConsoleColors.RESET + ')';
         }
     }
+    public static class ForExp extends Exp {
+        public Exp init;
+        public Exp condition;
+        public Exp increment;
+        public List<Exp> body;
 
+        public ForExp(Exp init, Exp condition, Exp increment, List<Exp> body) {
+            this.init = init;
+            this.condition = condition;
+            this.increment = increment;
+            this.body = body;
+        }
+
+        @Override
+        public String toString() {
+            return ConsoleColors.WHITE_BOLD + "ForExp" + ConsoleColors.RESET + "(" + condition + ConsoleColors.RESET + ')';
+        }
+    }
     public static class ClassExp extends Exp {
         public String name;
         public List<Exp> body;
@@ -312,7 +318,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "ClassExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + ')';
         }
     }
-
     public static class ConstructorExp extends Exp {
         public List<Exp> args;
         public List<Exp> body;
@@ -330,7 +335,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "ConstructorExp" + ConsoleColors.RESET + "(" + sj + ")";
         }
     }
-
     public static class InstanceExp extends Exp {
         public String name;
         public List<Exp> args;
@@ -348,7 +352,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "InstanceExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + (args.size() > 1 ? ", " + sj : "") + ")";
         }
     }
-
     public static class ImportExp extends Exp {
         public String name;
         public String alias;
@@ -377,7 +380,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "ImportExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + (alias == null ? "" : ", " + ConsoleColors.GREEN + '\'' + alias + '\'') + ConsoleColors.RESET + ')';
         }
     }
-
     public static class ImportedMethodExp extends Exp {
         public String name;
 
@@ -390,7 +392,6 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "ImportedMethodExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + ')';
         }
     }
-
     public static class ReturnExp extends Exp {
         public Exp value;
 
@@ -403,7 +404,92 @@ public abstract class Exp {
             return ConsoleColors.WHITE_BOLD + "ReturnExp" + ConsoleColors.RESET + "(" + value + ConsoleColors.RESET + ')';
         }
     }
+    public static class PrintExp extends Exp {
+        public ArrayList<Exp> value;
 
+        public PrintExp(ArrayList<Exp> value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return ConsoleColors.WHITE_BOLD + "PrintExp" + ConsoleColors.RESET;
+        }
+    }
+    public static class IncrementExp extends Exp {
+        public String name;
+
+        public IncrementExp(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return ConsoleColors.WHITE_BOLD + "IncrementExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + ')';
+        }
+    }
+    public static class DecrementExp extends Exp {
+        public String name;
+
+        public DecrementExp(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return ConsoleColors.WHITE_BOLD + "DecrementExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + name + '\'' + ConsoleColors.RESET + ')';
+        }
+    }
+    public static class UnaryOpExp extends Exp {
+        public Op op;
+        public Exp value;
+
+        public UnaryOpExp(Op op, Exp value) {
+            this.op = op;
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return ConsoleColors.WHITE_BOLD + "UnaryOpExp" + ConsoleColors.RESET + "(" + ConsoleColors.GREEN + '\'' + op.value + '\'' + ConsoleColors.RESET + ", " + value + ConsoleColors.RESET + ')';
+        }
+
+        public enum Op {
+            ADD("+"),
+            SUB("-"),
+            MUL("*"),
+            DIV("/"),
+            MOD("%"),
+            EQ("=="),
+            NE("!="),
+            LT("<"),
+            LE("<="),
+            GT(">"),
+            GE(">="),
+            AND("&&"),
+            OR("||"),
+            NOT("!"),
+            INCREMENT("++"),
+            DECREMENT("--"),
+            LPAREN("("),
+            RPAREN(")");;
+
+            public final String value;
+
+            Op(String value) {
+                this.value = value;
+            }
+
+            public static BinOpExp.Op fromString(String value) {
+                for (BinOpExp.Op op : BinOpExp.Op.values()) {
+                    if (op.value.equals(value)) {
+                        return op;
+                    }
+                }
+                return null;
+            }
+        }
+    }
     public static class BinOpExp extends Exp {
         public Op op;
         public Exp left;

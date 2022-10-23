@@ -35,11 +35,17 @@ public class Compiler {
 
         long lexTime = System.currentTimeMillis() - cms;
 
+        System.out.println();
+        System.out.println(ConsoleColors.WHITE_BOLD + "AST:" + ConsoleColors.RESET);
+
         Parser parser = new Parser(tokens);
         ast.addAll(parser.parse().getExps());
         ast.dump();
 
         long parseTime = System.currentTimeMillis() - cms - lexTime;
+
+        System.out.println();
+        System.out.println(ConsoleColors.WHITE_BOLD + "Result:" + ConsoleColors.RESET);
 
         Execution execution = new Execution(ast);
         execution.execute();
@@ -48,9 +54,11 @@ public class Compiler {
         long executeTime = System.currentTimeMillis() - cms - lexTime - parseTime;
 
         System.out.println();
-        System.out.println(ConsoleColors.WHITE_BOLD + "Finished lexing in " + ConsoleColors.GREEN + lexTime + "ms");
-        System.out.println(ConsoleColors.WHITE_BOLD + "Finished parsing in " + ConsoleColors.RED + parseTime + "ms");
-        System.out.println(ConsoleColors.WHITE_BOLD + "Finished executing in " + ConsoleColors.BLUE + executeTime + "ms");
+        System.out.println(ConsoleColors.WHITE_BOLD + "Statistics:" + ConsoleColors.RESET);
+        System.out.println(ConsoleColors.WHITE_BOLD + "  Finished lexing in " + ConsoleColors.GREEN + lexTime + "ms");
+        System.out.println(ConsoleColors.WHITE_BOLD + "  Finished parsing in " + ConsoleColors.RED + parseTime + "ms");
+        System.out.println(ConsoleColors.WHITE_BOLD + "  Finished executing in " + ConsoleColors.BLUE + executeTime + "ms");
+        System.out.println(ConsoleColors.WHITE_BOLD + "  Finished in " + ConsoleColors.YELLOW + (lexTime + parseTime + executeTime) + "ms");
     }
 
 }

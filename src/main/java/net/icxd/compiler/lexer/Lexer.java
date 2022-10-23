@@ -74,14 +74,26 @@ public class Lexer {
                     }
                     break;
                 case '+':
-                    tokens.add(new Token(Token.Type.ADD, "+", line, start, end));
-                    pos++;
-                    start++;
+                    if (pos + 1 < input.length() && input.charAt(pos + 1) == '+') {
+                        tokens.add(new Token(Token.Type.INCREMENT, "++", line, start, end));
+                        pos += 2;
+                        start += 2;
+                    } else {
+                        tokens.add(new Token(Token.Type.ADD, "+", line, start, end));
+                        pos++;
+                        start++;
+                    }
                     break;
                 case '-':
-                    tokens.add(new Token(Token.Type.SUB, "-", line, start, end));
-                    pos++;
-                    start++;
+                    if (pos + 1 < input.length() && input.charAt(pos + 1) == '-') {
+                        tokens.add(new Token(Token.Type.DECREMENT, "--", line, start, end));
+                        pos += 2;
+                        start += 2;
+                    } else {
+                        tokens.add(new Token(Token.Type.SUB, "-", line, start, end));
+                        pos++;
+                        start++;
+                    }
                     break;
                 case '*':
                     tokens.add(new Token(Token.Type.MUL, "*", line, start, end));
